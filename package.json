@@ -1,0 +1,20 @@
+{
+  "name": "scrivnr-signal",
+  "version": "1.0.0",
+  "description": "Signaling server for Scrivnr app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./server/index.js",
+    "devserv": "nodemon ./server/index.js"
+  },
+  "author": "CC8 Nightshade",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "morgan": "^1.9.1",
+    "socket.io": "^2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
