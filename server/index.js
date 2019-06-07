@@ -82,26 +82,15 @@ io.on("connection", (socket) => {
     }
     io.to(targetUser).emit("new-ice-candidate", data);
   });
+  socket.on("hang-up", () => {
+    console.log("transmitting ice candidate from", socket.id);
+    let targetUser;
+    if (socket.id === connectedUsers[0]) {
+      targetUser = connectedUsers[1];
+    } else {
+      targetUser = connectedUsers[0];
+    }
+    io.to(targetUser).emit("hang-up");
+  });
 
-  // socket.on("makePlay", (playData) => {
-  //   const {gameId, newPlay} = playData;
-  //   if ( // check for game existence and if player is in that game
-  //     gamesData[gameId] !== undefined &&
-  //     gamesData[gameId].playerSockets.length === 2 &&
-  //     gamesData[gameId].currentPlayer === socket.id
-  //   ) {
-  //     makePlay(newPlay.playRow, newPlay.playColumn, gamesData[gameId]);
-  //     for (let socketId of gamesData[gameId].playerSockets) {
-  //       io.to(socketId).emit("gameData", gamesData[gameId]);
-  //     }
-  //   }
-  //   else {
-  //     io.to(socket.id).emit("message", "It isn't your turn! \n(Or some other error)")
-  //   }
-  // });
-
-  // socket.on("resetGames", () => {
-  //   gamesData = {};
-  //   io.sockets.emit("message", "Please refresh page to start again");
-  // })
 });

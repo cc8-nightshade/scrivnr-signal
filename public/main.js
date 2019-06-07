@@ -1,6 +1,5 @@
 let mySocket;
 let myPeerConnection;
-let mySessionDescription;
 
 document.addEventListener("loadend", initialConnect());
 
@@ -12,8 +11,8 @@ function initialConnect() {
   });
   mySocket.on("video-offer", (videoOfferData) => {
     document.getElementById("testing").innerHTML = videoOfferData;
-    console.log("receiving video offer", videoOfferData);
-    if (myPeerConnection === undefined) {
+    console.log("receiving offer", videoOfferData);
+    if (!myPeerConnection) {
       console.log("handling video offer", videoOfferData);
 
       handleVideoOfferMessage(videoOfferData);
@@ -25,6 +24,9 @@ function initialConnect() {
   mySocket.on("new-ice-candidate", (iceCandidate) => {
     handleNewICECandidateMsg(iceCandidate);
   });
+  mySocket.on("hang-up", (iceCandidate) => {
+    closeVideoCall();
+  });
   mySocket.emit("initialize");
   console.log(mySocket);
 }
@@ -35,10 +37,15 @@ function startCall() {
   console.log("Creating caller's connection", myPeerConnection);
   var mediaConstraints = {
     audio: {
-      echoCancellation: {exact: true}
-    },
+      sampleRate: 16000,
+      channelCount: 1,
+      volume: 1.0,
+      echoCancellation: true
+      // ,
+      // noiseSuppression: true,
+    }
     // audio: true// We want an audio track
-    //,
+    ,
     video: true // ...and we want a video track
   };
   navigator.mediaDevices.getUserMedia(mediaConstraints)
@@ -94,43 +101,50 @@ function handleTrackEvent (event) {
 }
 
 function handleVideoOfferMessage(videoOfferData) {
+  document.getElementById("call-button").disabled = true;
   createPeerConnection();
   let offerDescription = new RTCSessionDescription(videoOfferData.sdp);
   console.log("session description receiving", offerDescription);
   myPeerConnection.setRemoteDescription(offerDescription)
-    .then(() => {
-      var mediaConstraints = {
-        audio: {
-          echoCancellation: {exact: true}
-        },
+  .then(() => {
+    var mediaConstraints = {
+      audio: {
+        sampleRate: 48000,
+        channelCount: 1,
+        volume: 1.0,
+        echoCancellation: true
+        // ,
+        // noiseSuppression: true,
+        }
         //audio: true // We want an audio track
-        //, 
+        , 
         video: true // ...and we want a video track
       };
-      return navigator.mediaDevices.getUserMedia(mediaConstraints);
-    })
-    .then((stream) => {
-      localStream = stream;  
-      document.getElementById("local_video").srcObject = localStream;
-        localStream.getTracks().forEach((track) => myPeerConnection.addTrack(track, localStream));
-      })
-    .then(() => {
-      return myPeerConnection.createAnswer();
-    })
-    .then((answer) => {
-      return myPeerConnection.setLocalDescription(answer);
-    })
-    .then(()=>{
-      console.log("sending my answer", myPeerConnection.localDescription)
-      mySocket.emit("video-answer", {
-        // name: myUsername,
-        // target: targetUsername,
-        //type: "video-offer",
-        sdp: myPeerConnection.localDescription
-      });
+    return navigator.mediaDevices.getUserMedia(mediaConstraints);
+  })
+  .then((stream) => {
+    localStream = stream;  
+    document.getElementById("local_video").srcObject = localStream;
+      localStream.getTracks().forEach((track) => myPeerConnection.addTrack(track, localStream));
+  })
+  .then(() => {
+    return myPeerConnection.createAnswer();
+  })
+  .then((answer) => {
+    return myPeerConnection.setLocalDescription(answer);
+  })
+  .then(()=>{
+    console.log("sending my answer", myPeerConnection.localDescription)
+    mySocket.emit("video-answer", {
+      // name: myUsername,
+      // target: targetUsername,
+      //type: "video-offer",
+      sdp: myPeerConnection.localDescription
     });
+  });
+  document.getElementById("hangup-button").disabled = true;
 }
-
+    
 function handleVideoAnswerMessage(videoAnswerData) {
   console.log("handling video answer", videoAnswerData);
   const desc = new RTCSessionDescription(videoAnswerData.sdp);
@@ -158,4 +172,51 @@ function handleNewICECandidateMsg(msg) {
 
   myPeerConnection.addIceCandidate(candidate);
     // .catch(reportError);
+}
+
+// ENDING OF CALLS
+function hangUpCall() {
+  closeVideoCall();
+  mySocket.emit("hang-up"
+  // ,{
+  //   name: myUsername,
+  //   target: targetUsername,
+  //   type: "hang-up"
+  // }
+  );
+}
+
+function closeVideoCall() {
+  var remoteVideo = document.getElementById("received_video");
+  var localVideo = document.getElementById("local_video");
+
+  if (myPeerConnection) {
+    myPeerConnection.ontrack = null;
+    myPeerConnection.onremovetrack = null;
+    myPeerConnection.onremovestream = null;
+    myPeerConnection.onicecandidate = null;
+    myPeerConnection.oniceconnectionstatechange = null;
+    myPeerConnection.onsignalingstatechange = null;
+    myPeerConnection.onicegatheringstatechange = null;
+    myPeerConnection.onnegotiationneeded = null;
+
+    if (remoteVideo.srcObject) {
+      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+    }
+
+    if (localVideo.srcObject) {
+      localVideo.srcObject.getTracks().forEach(track => track.stop());
+    }
+
+    myPeerConnection.close();
+    myPeerConnection = null;
+  }
+
+  remoteVideo.removeAttribute("src");
+  remoteVideo.removeAttribute("srcObject");
+  localVideo.removeAttribute("src");
+  localVideo.removeAttribute("srcObject");
+  
+  document.getElementById("hangup-button").disabled = true;
+  targetUsername = null;
 }
