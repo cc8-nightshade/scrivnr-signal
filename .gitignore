@@ -4,5 +4,6 @@ server/*.wav
 server/*.opus
 
 node_modules
+.env
 
 .DS_Store
