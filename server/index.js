@@ -3,16 +3,16 @@ const socket = require("socket.io");
 const morgan = require("morgan");
 const PORT = process.env.PORT || 9000;
 const fs = require("fs");
-var https = require('https');
-const speech = require('@google-cloud/speech');
+var https = require("https");
+const speech = require("@google-cloud/speech");
+const { firebase } = require("./firebase");
+const db = firebase.firestore();
 
-
-var privateKey = fs.readFileSync('./server/ssl/server.key');
-var certificate = fs.readFileSync('./server/ssl/server.cert');
-var credentials = {key: privateKey, cert: certificate};
+var privateKey = fs.readFileSync("./server/ssl/server.key");
+var certificate = fs.readFileSync("./server/ssl/server.cert");
+var credentials = { key: privateKey, cert: certificate };
 
 //var app = express.createServer(credentials);
-
 
 const app = express();
 app.use(
@@ -21,9 +21,7 @@ app.use(
   )
 );
 // Serve static HTML page
-app.use(express.static('public'));
-
-
+app.use(express.static("public"));
 
 console.log("Starting express...");
 // const server = app.listen(PORT, () => {
@@ -41,8 +39,8 @@ let io = socket(httpsServer);
 let connectedUsers = [];
 let blobData = [];
 
-io.on("connection", (socket) => {
-  socket.on("send-blob", (blob64) => {
+io.on("connection", socket => {
+  socket.on("send-blob", blob64 => {
     console.log(blob64.length);
     blobData.push(Buffer.from(blob64, "base64"));
     console.log(blobData);
@@ -58,7 +56,7 @@ io.on("connection", (socket) => {
     console.log(connectedUsers);
   });
 
-  socket.on("video-offer", (data) => {
+  socket.on("video-offer", data => {
     console.log("transmitting video offer from", socket.id);
     let targetUser;
     if (socket.id === connectedUsers[0]) {
@@ -69,7 +67,7 @@ io.on("connection", (socket) => {
     io.to(targetUser).emit("video-offer", data);
   });
 
-  socket.on("video-answer", (data) => {
+  socket.on("video-answer", data => {
     console.log("transmitting video answer from", socket.id);
     //console.log(data);
     let targetUser;
@@ -80,7 +78,7 @@ io.on("connection", (socket) => {
     }
     io.to(targetUser).emit("video-answer", data);
   });
-  socket.on("new-ice-candidate", (data) => {
+  socket.on("new-ice-candidate", data => {
     console.log("transmitting ice candidate from", socket.id);
     let targetUser;
     if (socket.id === connectedUsers[0]) {
@@ -102,15 +100,15 @@ io.on("connection", (socket) => {
   });
   socket.on("end-record", () => {
     // console.log(typeof blobData[0]);
-    
+
     var allAudio = Buffer.concat(blobData);
-    
+
     // getTranscription(allAudio.toString("base64")).catch(console.error);;
     // for (let i = 1; i < blobData.length; i++) {
 
     //   console.log(blobData[i].toString("base64"));
     // }
-    getTranscription(allAudio.toString("base64")).catch(console.error);;
+    getTranscription(allAudio.toString("base64")).catch(console.error);
     //fs.writeFileSync("./server/wavtest.wav", )
   });
 });
@@ -118,7 +116,7 @@ io.on("connection", (socket) => {
 async function getTranscription(audioBytes) {
   // Creates a client
   const client = new speech.SpeechClient();
- 
+
   // // The name of the audio file to transcribe
   // const fileName = './server/speech_16kbps_wb.wav';
 
@@ -126,30 +124,30 @@ async function getTranscription(audioBytes) {
   // const file = fs.readFileSync(fileName);
   // const audioBytes = file.toString('base64');
   // console.log(audioBytes);
- 
+
   // The audio file's encoding, sample rate in hertz, and BCP-47 language code
-  
+
   console.log("length of thing being sent to google", audioBytes.length);
   const audio = {
-    content: audioBytes,
+    content: audioBytes
     // data: file,
   };
   const config = {
     // encoding: 'AMR',
-    encoding: 'LINEAR16',
+    encoding: "LINEAR16",
     // encoding: 'OGG_OPUS',
     // sampleRateHertz: 16000,
-    languageCode: 'en-US',
+    languageCode: "en-US",
     audioChannelCount: 2,
     enableSeparateRecognitionPerChannel: false,
     enableAutomaticPunctuation: true,
-    enableWordTimeOffsets: true,
+    enableWordTimeOffsets: true
   };
   const request = {
     audio: audio,
-    config: config,
+    config: config
   };
- 
+
   // Detects speech in the audio file
   const [operation] = await client.longRunningRecognize(request);
   // const response = await operation.promise();
@@ -158,10 +156,66 @@ async function getTranscription(audioBytes) {
   console.log(response);
   // const [response] = await client.recognize(request);
   // console.log(response);
-  fs.writeFileSync("./server/sample-transcription.json", JSON.stringify(fullResponse));
+  fs.writeFileSync(
+    "./server/sample-transcription.json",
+    JSON.stringify(fullResponse)
+  );
   console.log(JSON.stringify(response));
   // const transcription = response.results
   //   .map(result => result.alternatives[0].transcript)
   //   .join('\n');
   // console.log(`Transcription: ${transcription}`);
+}
+
+const getAllDialogues = () => {
+  db.collection("dialogues")
+    .get()
+    .then(querySnapshot => {
+      const postArray = [];
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        postArray.push({
+          caller: data.caller,
+          callee: data.callee,
+          speech: data.speech,
+          id: doc.id });
+      });
+      console.log(postArray);
+    });
+}
+
+const addDialogue = () => {
+  const creatDialogue = {
+    caller: 'test1',
+    callee: 'test2',
+    speech: [
+      {
+        person: "test1",
+        text: "This is a test of recording data and getting a transcription while making a call.",
+        time: 0
+      },
+      {
+        person: "test2",
+        text: "I can hear your voice. It works!",
+        time: 4
+      },
+      {
+        person: "test1",
+        text: "Nice to meet you.",
+        time: 7
+      },
+      {
+        person: "test2",
+        text: "Nice to meet you too!",
+        time: 10
+      }
+    ],
+    startTime: new Date()
+  }
+
+  db.collection("dialogues")
+  .add(creatDialogue)
+  .then(docRef => {
+    console.log(docRef)
+  });
 }
