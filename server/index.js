@@ -24,7 +24,11 @@ app.use(
 // Serve static HTML page
 app.use(express.static('public'));
 
-
+// app.get('/transcipts', (rec, res) => {
+//   res.send({
+//     message: 'hello'
+//   })
+// })
 
 console.log("Starting express...");
 // const server = app.listen(PORT, () => {

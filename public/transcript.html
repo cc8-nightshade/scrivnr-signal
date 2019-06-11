@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link
+  href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+  />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+  <!-- <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> -->
+  <script src="https://cdn.webrtc-experiment.com/MediaStreamRecorder.js"></script>
+  
+  <link rel="stylesheet" href="styles.css" />
+  <title>Transcript</title>
+</head>
+<body>
+  <div>
+    <nav class="nav-wrapper teal darken-3 z-depth-0">
+      <a href="/" class="brand-logo">Scrivnr</a>
+      <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href='/contacts'>Contacts</a></li>
+        <li><a href='/transcripts'>Transcripts</a></li>
+        <li><a href='/logout'>Log Out</a></li>
+        <li><a href='/' class='btn btn-floating pink lighten-1'>IC</a></li>
+      </ul>
+
+    <ul class="sidenav" id="mobile-demo">
+      <li><a href='/contacts'>Contacts</a></li>
+      <li><a href='/transcripts'>Transcripts</a></li>
+      <li><a href='/logout'>Log Out</a></li>
+      <li><a href='/' class='btn btn-floating pink lighten-1'>IC</a></li>
+    </ul>
+    </nav>
+  </div>
+
+
+  
+ 
+  <div class="transcripts-wrapper row">
+    <div class="col m2" id="transcript-list"> 
+
+    </div>
+    <div class=" col m6 offset-m2">
+      <div class="row" id="transcript-row" >
+        
+      </div>
+    </div>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-app.js"></script>
+  
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-firestore.js"></script>
+  
+  <script src="./transcript.js"></script>
+</body>
+</html>
