@@ -1,7 +1,6 @@
 const express = require("express");
 const socket = require("socket.io");
 const morgan = require("morgan");
-const uniqueid = require('uniqid');
 const PORT = process.env.PORT || 9000;
 const fs = require("fs");
 var https = require("https");
@@ -11,9 +10,10 @@ const db = firebase.firestore();
 
 var privateKey = fs.readFileSync("./server/ssl/server.key");
 var certificate = fs.readFileSync("./server/ssl/server.cert");
-var credentials = { key: privateKey, cert: certificate };
+var credentials = {key: privateKey, cert: certificate};
 
 //var app = express.createServer(credentials);
+
 
 const app = express();
 app.use(
@@ -22,7 +22,9 @@ app.use(
   )
 );
 // Serve static HTML page
-app.use(express.static("public"));
+app.use(express.static('public'));
+
+
 
 console.log("Starting express...");
 // const server = app.listen(PORT, () => {
@@ -79,7 +81,7 @@ io.on("connection", (socket) => {
     //console.log(io.sockets.connected);
   });
 
-  socket.on("video-offer", data => {
+  socket.on("video-offer", (data) => {
     console.log("transmitting video offer from", socket.id);
     
     let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
@@ -90,7 +92,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("video-answer", data => {
+  socket.on("video-answer", (data) => {
     console.log("transmitting video answer from", socket.id);
     //console.log(data);
     let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
@@ -98,7 +100,8 @@ io.on("connection", (socket) => {
     currentConversation = initializeConversationData(socket.id, targetUser);
     console.log("creating conversation on answer", currentConversation);
   });
-  socket.on("new-ice-candidate", data => {
+
+  socket.on("new-ice-candidate", (data) => {
     console.log("transmitting ice candidate from", socket.id);
     let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
     io.to(targetUser).emit("new-ice-candidate", data);
@@ -129,6 +132,7 @@ io.on("connection", (socket) => {
       );
       if (CONSOLEME) {
         console.log("Complete conversation after results", currentConversation);
+        addDialogue(currentConversation);
       }
       delete bufferData[socket.id];
       console.log(`deleted user ${socket.id} from recording data, leaving ${Object.keys(bufferData)}`);
@@ -136,56 +140,10 @@ io.on("connection", (socket) => {
   });
 });
 
-
-const getAllDialogues = () => {
-  db.collection("dialogues")
-    .get()
-    .then(querySnapshot => {
-      const postArray = [];
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        postArray.push({
-          caller: data.caller,
-          callee: data.callee,
-          speech: data.speech,
-          id: data.id });
-      });
-      console.log(postArray);
-    });
-}
-
-const addDialogue = () => {
-  const creatDialogue = {
-    id: uniqueid(),
-    caller: 'test1',
-    receiver: 'test2',
-    speech: [
-      {
-        speaker: "test1",
-        text: "This is a test of recording data and getting a transcription while making a call.",
-        time: 0
-      },
-      {
-        speaker: "test2",
-        text: "I can hear your voice. It works!",
-        time: 4
-      },
-      {
-        speaker: "test1",
-        text: "Nice to meet you.",
-        time: 7
-      },
-      {
-        speaker: "test2",
-        text: "Nice to meet you too!",
-        time: 10
-      }
-    ],
-    startDateTime: new Date()
-  }
+const addDialogue = (data) => {
   
   db.collection("dialogues")
-  .add(creatDialogue)
+  .add(data)
   .then(docRef => {
     console.log(docRef)
   });

@@ -12,11 +12,9 @@ function initialConnect() {
     alert(messageData);
   });
   mySocket.on("video-offer", (videoOfferData) => {
-    document.getElementById("testing").innerHTML = videoOfferData;
     console.log("receiving offer", videoOfferData);
     if (!myPeerConnection) {
       console.log("handling video offer", videoOfferData);
-
       handleVideoOfferMessage(videoOfferData);
     }
   });
@@ -124,7 +122,7 @@ function handleTrackEvent (event) {
 }
 
 function handleVideoOfferMessage(videoOfferData) {
-  document.getElementById("call-button").disabled = true;
+  //document.getElementById("call-button").disabled = true;
   createPeerConnection();
   let offerDescription = new RTCSessionDescription(videoOfferData.sdp);
   console.log("session description receiving", offerDescription);
@@ -181,7 +179,7 @@ function handleVideoOfferMessage(videoOfferData) {
       sdp: myPeerConnection.localDescription
     });
   });
-  document.getElementById("hangup-button").disabled = true;
+  //document.getElementById("hangup-button").disabled = true;
 }
     
 function handleVideoAnswerMessage(videoAnswerData) {
@@ -257,6 +255,6 @@ function closeVideoCall() {
   localVideo.removeAttribute("src");
   localVideo.removeAttribute("srcObject");
   
-  document.getElementById("hangup-button").disabled = true;
+  //document.getElementById("hangup-button").disabled = true;
   targetUsername = null;
 }
