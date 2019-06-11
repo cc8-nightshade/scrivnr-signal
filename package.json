@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./server/index.js",
-    "devserv": "nodemon ./server/index.js"
+    "devserv": "nodemon ./server/index.js",
+    "preinstall": "node ./server/gcpSetup.js"
   },
   "author": "CC8 Nightshade",
   "license": "MIT",
