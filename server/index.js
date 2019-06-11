@@ -37,136 +37,105 @@ httpsServer.listen(9000);
 
 let io = socket(httpsServer);
 
-let connectedUsers = [];
-let blobData = [];
+const {
+  initializeConversationData,
+  extractConversationData,
+  addSpeech,
+  getTranscription
+} = require("./serverutil.js");
 
-io.on("connection", socket => {
-  socket.on("send-blob", blob64 => {
-    console.log(blob64.length);
-    blobData.push(Buffer.from(blob64, "base64"));
-    console.log(blobData);
+let connectedUsers = [];
+let bufferData = {};
+let currentConversation = {};
+
+io.on("connection", (socket) => {
+  socket.on("send-blob", (blob64) => {
+    if (bufferData[socket.id] === undefined) {
+      bufferData[socket.id] = [];
+    }
+    bufferData[socket.id].push(Buffer.from(blob64, "base64"));
+    console.log(`User ${socket.id} has -- ${bufferData[socket.id].length} -- pieces of data`)
+    // console.log(blob64.length);
+    // console.log(blobData);
   });
   socket.on("initialize", () => {
     console.log("receiving initialization from", socket.id);
     //io.to(socket.id).emit("message", "You are connected");
-    if (connectedUsers.length === 1) {
-      connectedUsers.push(socket.id);
-    } else {
-      connectedUsers = [socket.id];
+    switch (connectedUsers.length) {
+      case 0: { // if no users yet, add user as the sole user
+        connectedUsers = [socket.id];
+        break;
+      }
+      case 1: { // if only one connected user, add second
+        connectedUsers.push(socket.id);
+        break;
+      }
+      case 2: { // if already 2 users, push out last one.
+        connectedUsers[0] = connectedUsers[1];
+        connectedUsers[1] = socket.id;
+      }
     }
     console.log(connectedUsers);
+    //console.log(io.sockets.connected);
   });
 
   socket.on("video-offer", data => {
     console.log("transmitting video offer from", socket.id);
-    let targetUser;
-    if (socket.id === connectedUsers[0]) {
-      targetUser = connectedUsers[1];
+    
+    let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
+    if (io.sockets.connected[targetUser] !== undefined) {
+      io.to(targetUser).emit("video-offer", data);
     } else {
-      targetUser = connectedUsers[0];
+      io.to(socket.id).emit("message", "User has disconnected");
     }
-    io.to(targetUser).emit("video-offer", data);
   });
 
   socket.on("video-answer", data => {
     console.log("transmitting video answer from", socket.id);
     //console.log(data);
-    let targetUser;
-    if (socket.id === connectedUsers[0]) {
-      targetUser = connectedUsers[1];
-    } else {
-      targetUser = connectedUsers[0];
-    }
+    let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
     io.to(targetUser).emit("video-answer", data);
+    currentConversation = initializeConversationData(socket.id, targetUser);
+    console.log("creating conversation on answer", currentConversation);
   });
   socket.on("new-ice-candidate", data => {
     console.log("transmitting ice candidate from", socket.id);
-    let targetUser;
-    if (socket.id === connectedUsers[0]) {
-      targetUser = connectedUsers[1];
-    } else {
-      targetUser = connectedUsers[0];
-    }
+    let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
     io.to(targetUser).emit("new-ice-candidate", data);
   });
   socket.on("hang-up", () => {
     console.log("transmitting ice candidate from", socket.id);
-    let targetUser;
-    if (socket.id === connectedUsers[0]) {
-      targetUser = connectedUsers[1];
-    } else {
-      targetUser = connectedUsers[0];
-    }
+    let targetUser = connectedUsers[((connectedUsers.indexOf(socket.id) + 1) % 2)];
     io.to(targetUser).emit("hang-up");
   });
-  socket.on("end-record", () => {
+  socket.on("end-record", async () => {
     // console.log(typeof blobData[0]);
-
-    var allAudio = Buffer.concat(blobData);
-
-    // getTranscription(allAudio.toString("base64")).catch(console.error);;
-    // for (let i = 1; i < blobData.length; i++) {
-
-    //   console.log(blobData[i].toString("base64"));
-    // }
-    getTranscription(allAudio.toString("base64")).catch(console.error);
-    //fs.writeFileSync("./server/wavtest.wav", )
+    
+    if (bufferData[socket.id] !== undefined) {
+      var allAudio = Buffer.concat(bufferData[socket.id]);
+      let googleResult = await getTranscription(allAudio.toString("base64"), socket.id).catch(console.error);
+      googleResult = JSON.parse(googleResult);
+      if (socket.id === connectedUsers[0]) {
+        console.log("google result outside of util", googleResult);
+      }
+      let CONSOLEME = false;
+      // console.log(currentConversation);
+      if (currentConversation.speech.length > 0) {
+        CONSOLEME = true;
+      }
+      addSpeech(
+        currentConversation, 
+        extractConversationData(socket.id, googleResult)
+      );
+      if (CONSOLEME) {
+        console.log("Complete conversation after results", currentConversation);
+      }
+      delete bufferData[socket.id];
+      console.log(`deleted user ${socket.id} from recording data, leaving ${Object.keys(bufferData)}`);
+    }
   });
 });
 
-async function getTranscription(audioBytes) {
-  // Creates a client
-  const client = new speech.SpeechClient();
-
-  // // The name of the audio file to transcribe
-  // const fileName = './server/speech_16kbps_wb.wav';
-
-  // Reads a local audio file and converts it to base64
-  // const file = fs.readFileSync(fileName);
-  // const audioBytes = file.toString('base64');
-  // console.log(audioBytes);
-
-  // The audio file's encoding, sample rate in hertz, and BCP-47 language code
-
-  console.log("length of thing being sent to google", audioBytes.length);
-  const audio = {
-    content: audioBytes
-    // data: file,
-  };
-  const config = {
-    // encoding: 'AMR',
-    encoding: "LINEAR16",
-    // encoding: 'OGG_OPUS',
-    // sampleRateHertz: 16000,
-    languageCode: "en-US",
-    audioChannelCount: 2,
-    enableSeparateRecognitionPerChannel: false,
-    enableAutomaticPunctuation: true,
-    enableWordTimeOffsets: true
-  };
-  const request = {
-    audio: audio,
-    config: config
-  };
-
-  // Detects speech in the audio file
-  const [operation] = await client.longRunningRecognize(request);
-  // const response = await operation.promise();
-  const fullResponse = await operation.promise();
-  const [response] = fullResponse;
-  console.log(response);
-  // const [response] = await client.recognize(request);
-  // console.log(response);
-  fs.writeFileSync(
-    "./server/sample-transcription.json",
-    JSON.stringify(fullResponse)
-  );
-  console.log(JSON.stringify(response));
-  // const transcription = response.results
-  //   .map(result => result.alternatives[0].transcript)
-  //   .join('\n');
-  // console.log(`Transcription: ${transcription}`);
-}
 
 const getAllDialogues = () => {
   db.collection("dialogues")

@@ -15,6 +15,4 @@ if (!firebase.apps.length) {
   });
 }
 
-
-
 module.exports = { firebase };

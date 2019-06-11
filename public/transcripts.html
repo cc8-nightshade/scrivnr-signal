@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-firestore.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <style>
+      html, body{
+          height: 100%;
+      }
+      .container,
+      .row,
+      #dialogue-list
+       {
+          height:100%;
+      }
+      .alignLeft {
+        text-align: left;
+      }
+      .alignRight {
+        text-align: right;
+      }
+      .ft-green {
+        color:#2dce8a;
+      }
+      .name {
+        margin:0;
+      }
+      #dialogue-list {
+        background: #455dee;
+        color:#fff;
+      }
+      #dialogue-detail{
+          height: 100%;
+          overflow-y:scroll;
+      }
+      .alignLeft .name {
+        display:none;
+      }
+      .list-wrapper li{
+          cursor: pointer;
+          margin-bottom: 10px;
+          font-size: 14px;
+          padding: 10px 0;
+          position:relative;
+      }
+      .list-wrapper li::after {
+        content: "";
+        border-color: transparent #fff;
+        border-style: solid;
+        border-width: 0.35em 0 0.35em 0.45em;
+        display: block;
+        height: 0;
+        width: 0;
+        right: 10px;
+        top: calc(50% - 3px);
+        position: absolute;
+      }
+      .list-wrapper li.ft-green::after {
+        border-color: transparent #2dce8a;  
+      }
+      .textBox {
+        padding: 10px;
+        border-radius: 10px;
+        display: inline-block;
+        background-color: #d4edf8;
+        max-width: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="dialogue-list" class="col s4"></div>
+        <div id="dialogue-detail" class="col s8"></div>
+      </div>
+    </div>
+    <script src="moment.js"></script>
+    <script>
+      // TODO: Replace the following with your app's Firebase project configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyD_V51BMgZu__1LQXiS8-OJt3YTcR6MxAE",
+        authDomain: "nightshadetest-d5d00.firebaseapp.com",
+        databaseURL: "https://nightshadetest-d5d00.firebaseio.com",
+        projectId: "nightshadetest-d5d00",
+        storageBucket: "nightshadetest-d5d00.appspot.com",
+        messagingSenderId: "571666246376",
+        appId: "1:571666246376:web:67c123f75ac06c17"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      let dialogues = [];
+
+      const db = firebase.firestore();
+      db.collection("dialogues")
+        .get()
+        .then(querySnapshot => {
+          const dialogueList = [];
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            dialogueList.push({
+              caller: data.caller,
+              receiver: data.receiver,
+              speech: data.speech,
+              startDate: data.startDateTime,
+              id: data.id
+            });
+          });
+          dialogues = dialogueList;
+          createList();
+        });
+
+      function createList() {
+        let ul = document.createElement("ul");
+        ul.className = "list-wrapper";
+        for (let i = 0; i < dialogues.length; i++) {
+          let li = document.createElement("li");
+          li.setAttribute("ref", i);
+          li.innerText =
+            dialogues[i].caller + "/" + dialogues[i].receiver + ": " +
+            moment.duration(new Date() - dialogues[i].startDate.toDate()).humanize() + " ago";
+          ul.appendChild(li);
+        }
+
+        let preBTN = null;
+        ul.addEventListener("click", function(e) {
+          let index = 0;
+          let detail = document.querySelector("#dialogue-detail");
+          if (e.target && e.target.nodeName === "LI") {
+            index = e.target.getAttribute("ref");
+            let ul = document.createElement("ul");
+            if(preBTN) {
+                preBTN.className = "";
+            }
+            preBTN = e.target;
+            e.target.className = "ft-green";
+            for (let i = 0; i < dialogues[index].speech.length; i++) {
+              let li = document.createElement("li");
+              li.style.marginBottom = "10px";
+              li.className = dialogues[index].caller === dialogues[index].speech[i].speaker ? "alignLeft" : "alignRight";
+              li.innerHTML =
+                "<p class='name'>" + dialogues[index].speech[i].speaker + "</p>"+
+                "<span class='textBox'>" +
+                dialogues[index].speech[i].text +
+                "</span>";
+              ul.appendChild(li);
+            }
+            detail.innerHTML = "";
+            detail.appendChild(ul);
+          }
+        });
+        document.querySelector("#dialogue-list").appendChild(ul);
+      }
+    </script>
+  </body>
+</html>

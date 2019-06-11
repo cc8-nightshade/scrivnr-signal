@@ -2,6 +2,7 @@ server/ssl/*
 server/*.ogg
 server/*.wav
 server/*.opus
+server/*.json
 
 node_modules
 .env
