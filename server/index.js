@@ -3,14 +3,10 @@ const socket = require("socket.io");
 const morgan = require("morgan");
 const PORT = process.env.PORT || 9000;
 const fs = require("fs");
-var https = require("https");
 const speech = require("@google-cloud/speech");
 const { firebase } = require("./firebase");
 const db = firebase.firestore();
 
-var privateKey = fs.readFileSync("./server/ssl/server.key");
-var certificate = fs.readFileSync("./server/ssl/server.cert");
-var credentials = {key: privateKey, cert: certificate};
 
 //var app = express.createServer(credentials);
 
@@ -24,20 +20,21 @@ app.use(
 // Serve static HTML page
 app.use(express.static('public'));
 
-
-
 console.log("Starting express...");
-// const server = app.listen(PORT, () => {
-//   console.log(`App listening on port ${PORT}!`);
-// });
-// Setup logger
+const server = app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}!`);
+});
 
 // HTTPS
-var httpsServer = https.createServer(credentials, app);
+// const privateKey = fs.readFileSync("./server/ssl/server.key");
+// const certificate = fs.readFileSync("./server/ssl/server.cert");
+// const credentials = {key: privateKey, cert: certificate};
+// const https = require("https");
+// let server = https.createServer(credentials, app);
+// server.listen(9000);
+// END HTTPS SECTION
 
-httpsServer.listen(9000);
-
-let io = socket(httpsServer);
+let io = socket(server);
 
 const {
   initializeConversationData,
