@@ -1,7 +1,135 @@
-#local_video {
-  max-width: 200px;
+* {
+  box-shadow: none!important;
+  margin: 0;
+  padding: 0;
+}
+.brand-logo {
+  margin-left: 30px;
 }
 
-#received_video {
-  max-width: 200px;
+
+/* VIDEO Component */
+
+video {
+  margin: 0;
+  padding: 0;
+}
+
+.video-wrapper {
+  margin-top: 100px;
+}
+
+.camera-box {
+  width: 100%;
+  height: 320px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#received_video{
+  /* background-color: black; */
+  width: 450px;
+  /* height: 320px; */
+}
+/* width: 640px;
+height: 480px; */
+
+#local_video {
+  /* background-color: black; */
+  width: 450px;
+  /* height: 320px; */
+}
+
+.button-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+/* width: 50%; */
+@media screen and (max-width: 992px) {
+  .brand-logo {
+    margin-left: 0px;
+  }
+}
+
+@media screen and (max-width: 1228px) {
+  .brand-logo {
+    margin-left: 30px;
+  }
+  #local_video {
+    width: 350px;
+  }
+  #received_video{
+    width: 350px;
+  }
+}
+@media screen and (max-width: 826px) {
+  .brand-logo {
+    margin-left: 0px;
+  }
+  #local_video {
+    width: 250px;
+  }
+  #received_video{
+    width: 250px;
+  }
+}
+@media screen and (max-width: 540px) {
+  .camera-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* margin: auto; */
+  }
+  .video-wrapper {
+    margin: 0 20px;
+  }
+  #local_video {
+    margin: 10px 0;
+    width: 100%;
+  }
+  #received_video{
+    margin: 10px 0;
+    width: 100%;
+  }
+  .button-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+  button {
+    margin-bottom: 10px;
+    width: 50%;
+    height: 20px;
+  }
+}
+
+
+/* TRANSCRIPT component */
+.transcripts-wrapper{
+  margin: 40px;
+}
+.transcripts {
+  margin-top: 20px;
+}
+.sendMessage {
+  width: 100%;
+  max-height: 100%;
+  margin: 5px;
+  overflow-wrap: break-word;
+  background-color: pink;
+  margin-left: -10px;
+}
+.receiveMessage {
+  width: 100%;
+  max-height: 100%;
+  margin: 5px;
+  overflow-wrap: break-word;
+  background-color: beige;
+  /* margin-right: 20px; */
 }
