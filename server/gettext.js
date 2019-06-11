@@ -7,7 +7,7 @@ async function main() {
   const client = new speech.SpeechClient();
  
   // The name of the audio file to transcribe
-  const fileName = './server/ehb0l-p88we.opus';
+  const fileName = './server/testxxxx.ogg';
 
   // Reads a local audio file and converts it to base64
   const file = fs.readFileSync(fileName);

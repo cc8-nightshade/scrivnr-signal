@@ -1,5 +1,7 @@
 let mySocket;
 let myPeerConnection;
+let mediaRecorder;
+let reader = new FileReader();
 
 document.addEventListener("loadend", initialConnect());
 
@@ -31,27 +33,48 @@ function initialConnect() {
   console.log(mySocket);
 }
 
+function getTranslation () {
+  mySocket.emit("end-record");
+}
+
 function startCall() {
   console.log(mySocket);
   createPeerConnection();
   console.log("Creating caller's connection", myPeerConnection);
   var mediaConstraints = {
-    audio: {
-      sampleRate: 16000,
-      channelCount: 1,
-      volume: 1.0,
-      echoCancellation: true
-      // ,
-      // noiseSuppression: true,
-    }
+    audio: true
+    // {
+    //   sampleRate: 16000,
+    //   channelCount: 1,
+    //   volume: 1.0,
+    //   echoCancellation: true
+    //   ,
+    //   noiseSuppression: true,
+    // }
     // audio: true// We want an audio track
-    ,
-    video: true // ...and we want a video track
+    // ,
+    // video: true // ...and we want a video track
   };
   navigator.mediaDevices.getUserMedia(mediaConstraints)
-    .then((localStream) => {
-      document.getElementById("local_video").srcObject = localStream;
-      localStream.getTracks().forEach(track => myPeerConnection.addTrack(track, localStream));
+    .then((stream) => {
+      //document.getElementById("local_video").srcObject = stream;
+      stream.getTracks().forEach(track => myPeerConnection.addTrack(track, stream));
+      mediaRecorder = new MediaStreamRecorder(stream);
+      mediaRecorder.mimeType = 'audio/wav'; // check this line for audio/wav
+      // mediaRecorder.mimeType = 'audio/ogg'; // check this line for audio/wav
+      mediaRecorder.ondataavailable = async (blob) => {
+        //chunks.push(blob);
+        //console.log("pushing blob", chunks);
+        
+        reader.readAsDataURL(blob); 
+        reader.onloadend = function() {
+          mySocket.emit("send-blob", reader.result.substring(22));
+          console.log(reader.result.substring(22));
+        }
+        // mySocket.emit("send-blob", blob.toString("base64"));
+        // console.log("base64 blob", blob.toString("base64"))
+      };
+      mediaRecorder.start();
     });
     // TODO .catch(handleGetUserMediaError);
 }
@@ -108,24 +131,40 @@ function handleVideoOfferMessage(videoOfferData) {
   myPeerConnection.setRemoteDescription(offerDescription)
   .then(() => {
     var mediaConstraints = {
-      audio: {
-        sampleRate: 48000,
-        channelCount: 1,
-        volume: 1.0,
-        echoCancellation: true
+      audio: true
+        // {
+        // sampleRate: 48000,
+        // channelCount: 1,
+        // volume: 1.0,
+        // echoCancellation: true
         // ,
         // noiseSuppression: true,
-        }
+        // }
         //audio: true // We want an audio track
-        , 
-        video: true // ...and we want a video track
+        // , 
+        // video: true // ...and we want a video track
       };
     return navigator.mediaDevices.getUserMedia(mediaConstraints);
   })
   .then((stream) => {
-    localStream = stream;  
-    document.getElementById("local_video").srcObject = localStream;
-      localStream.getTracks().forEach((track) => myPeerConnection.addTrack(track, localStream));
+    // document.getElementById("local_video").srcObject = stream;
+    stream.getTracks().forEach((track) => myPeerConnection.addTrack(track, stream));
+    mediaRecorder = new MediaStreamRecorder(stream);
+    mediaRecorder.mimeType = 'audio/wav'; // check this line for audio/wav
+    // mediaRecorder.mimeType = 'audio/ogg'; // check this line for audio/wav
+    mediaRecorder.ondataavailable = async (blob) => {
+      //chunks.push(blob);
+      //console.log("pushing blob", chunks);
+      
+      reader.readAsDataURL(blob); 
+      reader.onloadend = function() {
+        mySocket.emit("send-blob", reader.result.substring(22));
+        console.log(reader.result.substring(22));
+      }
+      // mySocket.emit("send-blob", blob.toString("base64"));
+      // console.log("base64 blob", blob.toString("base64"))
+    };
+    mediaRecorder.start();
   })
   .then(() => {
     return myPeerConnection.createAnswer();
@@ -187,9 +226,10 @@ function hangUpCall() {
 }
 
 function closeVideoCall() {
+  mediaRecorder.stop();
+  setTimeout(() => {mySocket.emit("end-record");}, 2000);
   var remoteVideo = document.getElementById("received_video");
   var localVideo = document.getElementById("local_video");
-
   if (myPeerConnection) {
     myPeerConnection.ontrack = null;
     myPeerConnection.onremovetrack = null;
