@@ -22,7 +22,7 @@ coll.get().then(querySnapshot => {
     console.log(transcriptArray[0].speech)
     transcriptArray.forEach((transcript, i) => {
       const transcriptList = document.createElement("div"); 
-      transcriptList.innerHTML = `${i} ${transcript.caller} \n ${transcript.startDateTime}`
+      transcriptList.innerText = `${i} ${transcript.caller} \n ${transcript.startDateTime}`
       rowTwo.appendChild(transcriptList)
     })
 
