@@ -1,19 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
     <!-- <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script> -->
-    <script src="https://cdn.webrtc-experiment.com/MediaStreamRecorder.js"> </script>
+    <script src="https://cdn.webrtc-experiment.com/MediaStreamRecorder.js"></script>
     <script src="./main.js"></script>
-    
-    <link rel="stylesheet" href="styles.css">
+
+    <link rel="stylesheet" href="styles.css" />
     <title>Scrivnr test bed</title>
   </head>
   <body style="padding: 0px; margin:0px">
-    <button id="call-button" onclick="startCall();">
+
+    <div>
+      <nav class="nav-wrapper teal darken-3 z-depth-0">
+        <a href="/" class="brand-logo">Scrivnr</a>
+        <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        <ul class="right hide-on-med-and-down">
+          <!-- <li><a href='/contacts'>Contacts</a></li> -->
+          <li><a href='/transcript.html'>Transcript</a></li>
+          <!-- <li><a href='/logout'>Log Out</a></li> -->
+          <li><a href='/' class='btn btn-floating pink lighten-1'>IC</a></li>
+        </ul>
+
+      <ul class="sidenav" id="mobile-demo">
+        <!-- <li><a href='/contacts'>Contacts</a></li> -->
+        <li><a href='/transcript.html'>Transcript</a></li>
+        <!-- <li><a href='/logout'>Log Out</a></li> -->
+        <li><a href='/' class='btn btn-floating pink lighten-1'>IC</a></li>
+      </ul>
+      </nav>
+    </div>
+
+
+    <div>
+      <div class="container video-wrapper">
+        <div class="camera-box">
+          <video id="received_video" autoPlay></video>
+          <video id="local_video" autoPlay muted></video>
+        </div> 
+      </div>
+      <div class="button-wrapper">
+        <button onclick="startCall();" class="waves-effect waves-light btn-large">Start Chat</button>
+        <!-- <button onclick={this.acceptCall} class="waves-effect waves-light btn-large">Accept Call</button>  -->
+        <button id="hangup-button" class="waves-effect waves-light blue darken-1 btn-large" onclick="hangUpCall();">
+          Hang Up
+        </button>
+        <button id="record-button" class="waves-effect waves-light blue darken-1 btn-large" >
+          Record
+        </button>
+        <button id="stop-button" class="waves-effect waves-light blue darken-1 btn-large" >
+          Stop
+        </button>
+        <button id="translation-button" class="waves-effect waves-light blue darken-1 btn-large" onclick="getTranslation();">
+          Get translations
+        </button>
+      </div>
+      <div id="audio-player"></div>
+
+    </div>
+
+    <!-- <button id="call-button" onclick="startCall();">
       Call
     </button>
     <button id="hangup-button" onclick="hangUpCall();">
@@ -22,8 +80,8 @@
     <div class="camera-box">
       <video id="received_video" autoplay></video>
       <video id="local_video" autoplay muted></video>
-    </div>
-    <div>showing other SDP data</div>
+    </div> -->
+    <!-- <div>showing other SDP data</div>
     <div id="testing"></div>
     <button id="record-button">
       record
@@ -34,7 +92,60 @@
     <button id="translation-button" onclick="getTranslation();">
       Get Translations
     </button>
-    <div id="audio-player"></div>
+    <div id="audio-player"></div> -->
     <!-- <script src="./record.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+       <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-firestore.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('.sidenav');
+        var instances = M.Sidenav.init(elems, options);
+      });
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBkO2Id9fChJLJEIoDncFQIZkveN1p4O6M",
+        authDomain: "scrivnr-8564b.firebaseapp.com",
+        databaseURL: "https://scrivnr-8564b.firebaseio.com",
+        projectId: "scrivnr-8564b",
+        storageBucket: "scrivnr-8564b.appspot.com",
+        messagingSenderId: "965017963607",
+        appId: "1:965017963607:web:f4a5340fb6997601"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore()
+      const coll = db.collection("transcripts")
+
+      coll.get().then(querySnapshot => {
+        let transcriptArray = []
+        querySnapshot.forEach(doc => {
+          transcriptArray.push(doc.data())
+        });
+        console.log(transcriptArray)
+        dispatch({ type: "GET_TRANSCRIPTS", transcriptArray }
+        );
+      })
+      
+      
+      // .then(function(doc) {
+      //     if (doc.exists) {
+      //         console.log("Document data:", doc.data());
+      //     } else {
+      //         // doc.data() will be undefined in this case
+      //         console.log("No such document!");
+      //     }
+      // }).catch(function(error) {
+      //     console.log("Error getting document:", error);
+      // });
+
+
+
+      console.log('hey there')
+    </script>
   </body>
 </html>
