@@ -1,6 +1,7 @@
 const express = require("express");
 const socket = require("socket.io");
 const morgan = require("morgan");
+const uniqueid = require('uniqid');
 const PORT = process.env.PORT || 9000;
 const fs = require("fs");
 var https = require("https");
@@ -178,7 +179,7 @@ const getAllDialogues = () => {
           caller: data.caller,
           callee: data.callee,
           speech: data.speech,
-          id: doc.id });
+          id: data.id });
       });
       console.log(postArray);
     });
@@ -186,33 +187,34 @@ const getAllDialogues = () => {
 
 const addDialogue = () => {
   const creatDialogue = {
+    id: uniqueid(),
     caller: 'test1',
-    callee: 'test2',
+    receiver: 'test2',
     speech: [
       {
-        person: "test1",
+        speaker: "test1",
         text: "This is a test of recording data and getting a transcription while making a call.",
         time: 0
       },
       {
-        person: "test2",
+        speaker: "test2",
         text: "I can hear your voice. It works!",
         time: 4
       },
       {
-        person: "test1",
+        speaker: "test1",
         text: "Nice to meet you.",
         time: 7
       },
       {
-        person: "test2",
+        speaker: "test2",
         text: "Nice to meet you too!",
         time: 10
       }
     ],
-    startTime: new Date()
+    startDateTime: new Date()
   }
-
+  
   db.collection("dialogues")
   .add(creatDialogue)
   .then(docRef => {
