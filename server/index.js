@@ -5,7 +5,8 @@ const PORT = process.env.PORT || 9000;
 const fs = require("fs");
 var https = require("https");
 const speech = require("@google-cloud/speech");
-
+const { firebase } = require("./firebase");
+const db = firebase.firestore();
 
 var privateKey = fs.readFileSync("./server/ssl/server.key");
 var certificate = fs.readFileSync("./server/ssl/server.cert");
@@ -131,6 +132,7 @@ io.on("connection", (socket) => {
       );
       if (CONSOLEME) {
         console.log("Complete conversation after results", currentConversation);
+        addDialogue(currentConversation);
       }
       delete bufferData[socket.id];
       console.log(`deleted user ${socket.id} from recording data, leaving ${Object.keys(bufferData)}`);
@@ -138,3 +140,11 @@ io.on("connection", (socket) => {
   });
 });
 
+const addDialogue = (data) => {
+  
+  db.collection("dialogues")
+  .add(data)
+  .then(docRef => {
+    console.log(docRef)
+  });
+}
