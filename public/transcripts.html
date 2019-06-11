@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
+    <title>Transcripts</title>
     <script src="https://www.gstatic.com/firebasejs/6.1.1/firebase-app.js"></script>
 
     <!-- Add Firebase products that you want to use -->
@@ -14,15 +14,16 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
+    <link rel="stylesheet" href="styles.css" />
     <style>
-      html, body{
-          height: 100%;
+      html,
+      body {
+        height: 100%;
       }
       .container,
       .row,
-      #dialogue-list
-       {
-          height:100%;
+      #dialogue-list {
+        height: 100%;
       }
       .alignLeft {
         text-align: left;
@@ -31,28 +32,29 @@
         text-align: right;
       }
       .ft-green {
-        color:#2dce8a;
+        color: #2dce8a;
       }
       .name {
-        margin:0;
+        margin: 0;
       }
       #dialogue-list {
         background: #455dee;
-        color:#fff;
+        color: #fff;
       }
-      #dialogue-detail{
-          height: 100%;
-          overflow-y:scroll;
+      #dialogue-detail {
+        height: 100%;
+        overflow-y: scroll;
+        padding-top: 10px;
       }
       .alignLeft .name {
-        display:none;
+        display: none;
       }
-      .list-wrapper li{
-          cursor: pointer;
-          margin-bottom: 10px;
-          font-size: 14px;
-          padding: 10px 0;
-          position:relative;
+      .list-wrapper li {
+        cursor: pointer;
+        margin-bottom: 10px;
+        font-size: 14px;
+        padding: 10px 0;
+        position: relative;
       }
       .list-wrapper li::after {
         content: "";
@@ -67,7 +69,7 @@
         position: absolute;
       }
       .list-wrapper li.ft-green::after {
-        border-color: transparent #2dce8a;  
+        border-color: transparent #2dce8a;
       }
       .textBox {
         padding: 10px;
@@ -76,9 +78,40 @@
         background-color: #d4edf8;
         max-width: 50%;
       }
+      .shortenId {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        position: relative;
+        top: 5px;
+        width: 40px;
+      }
     </style>
   </head>
   <body>
+    <div>
+      <nav class="nav-wrapper teal darken-3 z-depth-0">
+        <a href="/" class="brand-logo">Scrivnr</a>
+        <a href="#" data-target="mobile-demo" class="sidenav-trigger"
+          ><i class="material-icons">menu</i></a
+        >
+        <ul class="right hide-on-med-and-down">
+          <li><a href="/contacts">Contacts</a></li>
+          <li><a href="/transcripts">Transcripts</a></li>
+          <li><a href="/logout">Log Out</a></li>
+          <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li>
+        </ul>
+
+        <ul class="sidenav" id="mobile-demo">
+          <li><a href="/contacts">Contacts</a></li>
+          <li><a href="/transcripts">Transcripts</a></li>
+          <li><a href="/logout">Log Out</a></li>
+          <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li>
+        </ul>
+      </nav>
+    </div>
+
     <div class="container">
       <div class="row">
         <div id="dialogue-list" class="col s4"></div>
@@ -126,9 +159,19 @@
         for (let i = 0; i < dialogues.length; i++) {
           let li = document.createElement("li");
           li.setAttribute("ref", i);
-          li.innerText =
-            dialogues[i].caller + "/" + dialogues[i].receiver + ": " +
-            moment.duration(new Date() - dialogues[i].startDate.toDate()).humanize() + " ago";
+          li.innerHTML =
+            "<span class='shortenId'>" +
+            dialogues[i].caller +
+            "</span>" +
+            "<span>/ </span>" +
+            "<span class='shortenId'>" +
+            dialogues[i].receiver +
+            "</span>" +
+            ": " +
+            moment
+              .duration(new Date() - dialogues[i].startDate.toDate())
+              .humanize() +
+            " ago";
           ul.appendChild(li);
         }
 
@@ -139,17 +182,22 @@
           if (e.target && e.target.nodeName === "LI") {
             index = e.target.getAttribute("ref");
             let ul = document.createElement("ul");
-            if(preBTN) {
-                preBTN.className = "";
+            if (preBTN) {
+              preBTN.className = "";
             }
             preBTN = e.target;
             e.target.className = "ft-green";
             for (let i = 0; i < dialogues[index].speech.length; i++) {
               let li = document.createElement("li");
               li.style.marginBottom = "10px";
-              li.className = dialogues[index].caller === dialogues[index].speech[i].speaker ? "alignLeft" : "alignRight";
+              li.className =
+                dialogues[index].caller === dialogues[index].speech[i].speaker
+                  ? "alignLeft"
+                  : "alignRight";
               li.innerHTML =
-                "<p class='name'>" + dialogues[index].speech[i].speaker + "</p>"+
+                "<p class='name'>" +
+                dialogues[index].speech[i].speaker +
+                "</p>" +
                 "<span class='textBox'>" +
                 dialogues[index].speech[i].text +
                 "</span>";
