@@ -21,17 +21,17 @@ app.use(
 app.use(express.static('public'));
 
 console.log("Starting express...");
-// const server = app.listen(PORT, () => {
-//   console.log(`App listening on port ${PORT}!`);
-// });
+const server = app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}!`);
+});
 
 // HTTPS
-const privateKey = fs.readFileSync("./server/ssl/server.key");
-const certificate = fs.readFileSync("./server/ssl/server.cert");
-const credentials = {key: privateKey, cert: certificate};
-const https = require("https");
-let server = https.createServer(credentials, app);
-server.listen(9000);
+// const privateKey = fs.readFileSync("./server/ssl/server.key");
+// const certificate = fs.readFileSync("./server/ssl/server.cert");
+// const credentials = {key: privateKey, cert: certificate};
+// const https = require("https");
+// let server = https.createServer(credentials, app);
+// server.listen(9000);
 // END HTTPS SECTION
 
 let io = socket(server);
