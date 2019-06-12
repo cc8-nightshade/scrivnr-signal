@@ -31,6 +31,9 @@
       .alignRight {
         text-align: right;
       }
+      .alignRight .textBox {
+          background-color: #dbf8d4;
+      }
       .ft-green {
         color: #2dce8a;
       }
@@ -45,6 +48,7 @@
         height: 100%;
         overflow-y: scroll;
         padding-top: 10px;
+        padding-left: 30px;
       }
       .alignLeft .name {
         display: none;
@@ -97,17 +101,17 @@
           ><i class="material-icons">menu</i></a
         >
         <ul class="right hide-on-med-and-down">
-          <li><a href="/contacts">Contacts</a></li>
-          <li><a href="/transcripts">Transcripts</a></li>
-          <li><a href="/logout">Log Out</a></li>
-          <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li>
+          <!-- <li><a href="/contacts">Contacts</a></li> -->
+          <li><a href="/transcripts" class="activate">Call</a></li>
+          <!-- <li><a href="/logout">Log Out</a></li> -->
+          <!-- <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li> -->
         </ul>
 
         <ul class="sidenav" id="mobile-demo">
-          <li><a href="/contacts">Contacts</a></li>
-          <li><a href="/transcripts">Transcripts</a></li>
-          <li><a href="/logout">Log Out</a></li>
-          <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li>
+          <!-- <li><a href="/contacts">Contacts</a></li> -->
+          <li><a href="/transcripts">Call</a></li>
+          <!-- <li><a href="/logout">Log Out</a></li>
+          <li><a href="/" class="btn btn-floating pink lighten-1">IC</a></li> -->
         </ul>
       </nav>
     </div>
@@ -149,7 +153,7 @@
               id: data.id
             });
           });
-          dialogues = dialogueList;
+          dialogues = dialogueList.sort((a, b) => b.startDate.toDate() - a.startDate.toDate());
           createList();
         });
 
@@ -160,18 +164,8 @@
           let li = document.createElement("li");
           li.setAttribute("ref", i);
           li.innerHTML =
-            "<span class='shortenId'>" +
-            dialogues[i].caller +
-            "</span>" +
-            "<span>/ </span>" +
-            "<span class='shortenId'>" +
-            dialogues[i].receiver +
-            "</span>" +
-            ": " +
-            moment
-              .duration(new Date() - dialogues[i].startDate.toDate())
-              .humanize() +
-            " ago";
+            moment(dialogues[i].startDate.toDate()).format("YYYY/MM/DD HH:MM");
+
           ul.appendChild(li);
         }
 
@@ -195,9 +189,9 @@
                   ? "alignLeft"
                   : "alignRight";
               li.innerHTML =
-                "<p class='name'>" +
-                dialogues[index].speech[i].speaker +
-                "</p>" +
+                // "<p class='name'>" +
+                // dialogues[index].speech[i].speaker +
+                // "</p>" +
                 "<span class='textBox'>" +
                 dialogues[index].speech[i].text +
                 "</span>";
